@@ -5,29 +5,29 @@ use super::*;
 pub struct BaseOAuthBuilder;
 
 impl OAuthBuilder for BaseOAuthBuilder {
-    type ImplicitOAuth = ImplicitOAuth;
+    type ImplicitOAuth<'a> = ImplicitOAuth<'a>;
 
     fn scopes(&self) -> Vec<&str> {
         vec![]
     }
 
-    fn authenticate_implicit(self, access_token: String) -> Self::ImplicitOAuth {
+    fn authenticate_implicit_with_client<'a>(self, access_token: String, client: &'a Client) -> Self::ImplicitOAuth<'a> {
         ImplicitOAuth {
             access_token,
             prefix: "https://www.worldcubeassociation.org/api/v0/".to_owned(),
-            client: Client::new(),
+            client,
         }
     }
 }
 
-pub struct ImplicitOAuth {
+pub struct ImplicitOAuth<'a> {
     access_token: String,
     prefix: String,
-    client: Client,
+    client: &'a Client,
 }
 
 #[async_trait]
-impl OAuth for ImplicitOAuth {
+impl OAuth for ImplicitOAuth<'_> {
     type Email = Disabled;
 
     type ManageCompetitions = Disabled;
@@ -55,7 +55,7 @@ impl OAuth for ImplicitOAuth {
     }
 }
 
-impl LoggedIn for ImplicitOAuth { }
+impl LoggedIn for ImplicitOAuth<'_> { }
 
 pub struct PublicApi {
     client: Client,

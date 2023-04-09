@@ -1,4 +1,5 @@
-/*pub use wca_oauth::noauth::*;
+use reqwest::Client;
+pub use wca_oauth::oauth::*;
 
 #[tokio::main]
 async fn main() {
@@ -10,11 +11,12 @@ async fn main() {
             "FcEvy_FI92tLWgmL5hy41x8vCc7Crfo-153m42AFNtI".to_owned(),
             "urn:ietf:wg:oauth:2.0:oob".to_owned())
         .with_manage_competition_scope()
-        .authenticate_explicit(input)
+//        .authenticate_explicit(input)
+        .authenticate_explicit_with_client(input, &Client::new())
         .await
         .unwrap()
         .me()
         .send().await;
 
     println!("{result:?}");
-}*/
+}

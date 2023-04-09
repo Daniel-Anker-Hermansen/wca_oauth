@@ -58,58 +58,31 @@ pub struct WithSecret<T> {
 }
 
 impl<T> OAuthBuilder for WithSecret<T> where T: OAuthBuilder {
-    type ImplicitOAuth = T::ImplicitOAuth;
+    type ImplicitOAuth<'a> = T::ImplicitOAuth<'a>;
 
     fn scopes(&self) -> Vec<&str> {
         self.inner.scopes()
     }
 
-    fn authenticate_implicit(self, access_token: String) -> Self::ImplicitOAuth {
-        self.inner.authenticate_implicit(access_token)
+    fn authenticate_implicit_with_client<'a>(self, access_token: String, client: &'a Client) -> Self::ImplicitOAuth<'a> {
+        self.inner.authenticate_implicit_with_client(access_token, client)
     }
 }
 
 #[async_trait]
-impl<T> OAuthBuilderWithSecret for WithSecret<T> where T: OAuthBuilder + Send {
-    type ExplicitOAuth = ExplicitOauth<T::ImplicitOAuth>;
+impl<T> OAuthBuilderWithSecret for WithSecret<T> where T: OAuthBuilder + Send + Sync {
+    type ExplicitOAuth<'a> = ExplicitOauth<T::ImplicitOAuth<'a>>;
 
     fn set_url(&mut self, url: String) {
         self.url = url;
     }
 
-    async fn authenticate_explicit(self, access_code: String) -> Result<Self::ExplicitOAuth, Error> {
-        let params = [
-            ("grant_type", "authorization_code"),
-            ("client_id", &self.client_id),
-            ("client_secret", &self.secret),
-            ("redirect_uri", &self.redirect_uri),
-            ("code", access_code.trim()),
-        ];
-
-        let response = Client::new()
-            .post(&self.url)
-            .form(&params)
-            .send()
-            .await?
-            .text()
-            .await?;
-
-        let auth_response = serde_json::from_str::<AuthResponse>(&response)
-            .map_err(|_| serde_json::from_str::<ApiError>(&response)
-                .map(|e| Error::from(e))
-                .unwrap_or_else(|_| Error::from(format!("Error in requring authentification. The error did not conform to the expected format. Received following: {response}"))))?;
+    async fn authenticate_explicit_with_client<'a>(self, access_code: String, client: &'a Client) -> Result<Self::ExplicitOAuth<'a>, Error> {
+        let auth_response = get_auth_response(&self, &access_code).await?;
 
         let access_token = auth_response.access_token;
 
-        let required_scopes: HashSet<_> = self.scopes().into_iter().collect();
-        let obtained_scopes: HashSet<_> = auth_response.scope.split_whitespace().collect();
-        let mut difference_scopes = required_scopes.difference(&obtained_scopes);
-
-        if let Some(scope) = difference_scopes.next() {
-            return Err(Error::MissingScope(scope.to_string()));
-        }
-
-        let inner = self.inner.authenticate_implicit(access_token);
+        let inner = self.inner.authenticate_implicit_with_client(access_token, client);
         Ok(ExplicitOauth {
             client_id: self.client_id,
             secret: self.secret,
@@ -120,6 +93,39 @@ impl<T> OAuthBuilderWithSecret for WithSecret<T> where T: OAuthBuilder + Send {
         })
     }
 }
+
+async fn get_auth_response<'a, T>(builder: &WithSecret<T>, access_code: &str) -> Result<AuthResponse, Error> where WithSecret<T>: OAuthBuilder {
+    let params = [
+        ("grant_type", "authorization_code"),
+        ("client_id", &builder.client_id),
+        ("client_secret", &builder.secret),
+        ("redirect_uri", &builder.redirect_uri),
+        ("code", access_code.trim()),
+    ];
+
+    let response = Client::new()
+        .post(&builder.url)
+        .form(&params)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    let auth_response = serde_json::from_str::<AuthResponse>(&response)
+        .map_err(|_| serde_json::from_str::<ApiError>(&response)
+            .map(|e| Error::from(e))
+            .unwrap_or_else(|_| Error::from(format!("Error in requring authentification. The error did not conform to the expected format. Received following: {response}"))))?;
+
+    let required_scopes: HashSet<_> = builder.scopes().into_iter().collect();
+    let obtained_scopes: HashSet<_> = auth_response.scope.split_whitespace().collect();
+    let mut difference_scopes = required_scopes.difference(&obtained_scopes);
+
+    if let Some(scope) = difference_scopes.next() {
+        return Err(Error::MissingScope(scope.to_string()));
+    }
+
+    Ok(auth_response)        
+}    
 
 #[derive(Deserialize, Debug)]
 struct AuthResponse {

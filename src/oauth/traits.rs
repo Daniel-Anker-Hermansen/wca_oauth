@@ -40,7 +40,7 @@ pub trait Refreshable {
     async fn refresh(&mut self) -> Result<(), Error>;
 }
 
-trait Scope { }
+pub trait Scope { }
 
 pub struct Enabled;
 
@@ -52,7 +52,7 @@ impl Scope for Disabled { }
 
 /// Builder trait for building an oauth instance
 pub trait OAuthBuilder: Sized {
-    type ImplicitOAuth: OAuth + Sync + Send;
+    type ImplicitOAuth<'a>: OAuth + Sync + Send;
 
     fn with_secret(self, client_id: String, secret: String, redirect_uri: String) -> WithSecret<Self> {
         WithSecret { client_id, secret, redirect_uri, inner: self, url: "https://staging.worldcubeassociation.org/oauth/token".to_owned() }
@@ -68,16 +68,24 @@ pub trait OAuthBuilder: Sized {
 
     fn scopes(&self) -> Vec<&str>;
 
-    fn authenticate_implicit(self, access_token: String) -> Self::ImplicitOAuth;
+    fn authenticate_implicit(self, access_token: String) -> Self::ImplicitOAuth<'static> {
+        self.authenticate_implicit_with_client(access_token, &CLIENT)
+    }
+
+    fn authenticate_implicit_with_client<'a>(self, access_token: String, client: &'a Client) -> Self::ImplicitOAuth<'a>;
 }
 
 #[async_trait]
 pub trait OAuthBuilderWithSecret: Sized + OAuthBuilder {
-    type ExplicitOAuth: OAuth + Refreshable + Sync + Send;
+    type ExplicitOAuth<'a>: OAuth + Refreshable + Sync + Send;
 
     fn set_url(&mut self, url: String);
 
-    async fn authenticate_explicit(self, access_code: String) -> Result<Self::ExplicitOAuth, Error>;
+    async fn authenticate_explicit(self, access_code: String) -> Result<Self::ExplicitOAuth<'static>, Error> {
+        self.authenticate_explicit_with_client(access_code, &CLIENT).await
+    }
+
+    async fn authenticate_explicit_with_client<'a>(self, access_code: String, client: &'a Client) -> Result<Self::ExplicitOAuth<'a>, Error>;
 }
 
 pub trait OAuthManageCompetitions { }

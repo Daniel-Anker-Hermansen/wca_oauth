@@ -1,8 +1,8 @@
 //mod wcif;
-mod oauth;
+pub mod oauth;
 mod competition;
 //mod wcif_oauth;
-mod api_types;
+//mod api_types;
 //pub mod noauth;
 
 //pub use wcif::*;
