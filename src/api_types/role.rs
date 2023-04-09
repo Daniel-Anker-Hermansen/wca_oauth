@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer, Serializer, Serialize};
 
+#[derive(Debug)]
 pub enum Role {
     Delegate,
     TraineeDelegate,

@@ -19,7 +19,7 @@ pub struct Person<Vis> {
     email: Option<String>,
     pub avatar: Option<Avatar>,
     pub roles: Vec<Role>,
-    pub registration: Option<Registration>,
+    pub registration: Option<Registration<Vis>>,
     pub assignments: Vec<Assignment>,
     pub personal_bests: Vec<PersonalBest>,
     pub extensions: Vec<Value>,
