@@ -2,7 +2,18 @@ use async_trait::async_trait;
 use reqwest::Client;
 use super::*;
 
-pub struct BaseOAuthBuilder;
+#[derive(Clone)]
+pub struct BaseOAuthBuilder(pub(super) &'static str);
+
+impl BaseOAuthBuilder {
+    pub fn new() -> BaseOAuthBuilder {
+        BaseOAuthBuilder("https://www.worldcubeassociation.org/api/v0/")
+    }
+
+    pub fn staging() -> BaseOAuthBuilder {
+        BaseOAuthBuilder("https://staging.worldcubeassociation.org/api/v0/")
+    }
+}
 
 impl OAuthBuilder for BaseOAuthBuilder {
     type ImplicitOAuth<'a> = ImplicitOAuth<'a>;
@@ -14,7 +25,7 @@ impl OAuthBuilder for BaseOAuthBuilder {
     fn authenticate_implicit_with_client<'a>(self, access_token: String, client: &'a Client) -> Self::ImplicitOAuth<'a> {
         ImplicitOAuth {
             access_token,
-            prefix: "https://www.worldcubeassociation.org/api/v0/".to_owned(),
+            prefix: self.0.to_owned(),
             client,
         }
     }
@@ -38,8 +49,8 @@ impl OAuth for ImplicitOAuth<'_> {
         &self.prefix
     }
 
-    fn set_prefix(&mut self, prefix: String) {
-        self.prefix = prefix;
+    fn client(&self ) -> &Client {
+        &self.client
     }
 
     async fn custom_route(&self, suffix: &str) -> Result<String, reqwest::Error> {
@@ -55,25 +66,39 @@ impl OAuth for ImplicitOAuth<'_> {
     }
 }
 
+impl SetAccessToken for ImplicitOAuth<'_> {
+    fn set_access_token(&mut self, access_token: String) {
+        self.access_token = access_token;
+    }
+}
+
 impl LoggedIn for ImplicitOAuth<'_> { }
 
-pub struct PublicApi {
-    client: Client,
+pub struct PublicApi<'a> {
+    client: &'a Client,
     prefix: String,
 }
 
-impl PublicApi {
-    pub fn new() -> PublicApi {
-        PublicApi { client: Client::new(), prefix: "https://www.worldcubeassociation.org/api/v0/".to_owned() }
+impl PublicApi<'_> {
+    pub fn new() -> PublicApi<'static> {
+        PublicApi { client: &CLIENT, prefix: "https://www.worldcubeassociation.org/api/v0/".to_owned() }
+    }
+
+    pub fn new_with_client(client: &Client) -> PublicApi<'_> {
+        PublicApi { client, prefix: "https://www.worldcubeassociation.org/api/v0/".to_owned() }
     }
     
-    pub fn staging() -> PublicApi {
-        PublicApi { client: Client::new(), prefix: "https://staging.worldcubeassociation.org/api/v0/".to_owned() }
+    pub fn staging() -> PublicApi<'static> {
+        PublicApi { client: &CLIENT, prefix: "https://staging.worldcubeassociation.org/api/v0/".to_owned() }
+    }
+    
+    pub fn staging_with_client(client: &Client) -> PublicApi<'_> {
+        PublicApi { client, prefix: "https://staging.worldcubeassociation.org/api/v0/".to_owned() }
     }
 }
 
 #[async_trait]
-impl OAuth for PublicApi {
+impl OAuth for PublicApi<'_> {
     type Email = Disabled;
 
     type ManageCompetitions = Disabled;
@@ -84,8 +109,8 @@ impl OAuth for PublicApi {
         &self.prefix
     }
 
-    fn set_prefix(&mut self, prefix: String) {
-        self.prefix = prefix;
+    fn client(&self) -> &Client {
+        &self.client
     }
 
     async fn custom_route(&self, suffix: &str) -> Result<String, reqwest::Error> {

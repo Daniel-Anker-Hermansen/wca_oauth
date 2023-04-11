@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use super::*;
 
+#[derive(Clone)]
 pub struct WithManageCompetition<T>(pub(super) T);
 
 impl<T> OAuthBuilder for WithManageCompetition<T> where T: OAuthBuilder {
@@ -21,10 +22,6 @@ impl<T> OAuthBuilder for WithManageCompetition<T> where T: OAuthBuilder {
 impl<T> OAuthBuilderWithSecret for WithManageCompetition<T> where T: OAuthBuilderWithSecret + Send {
     type ExplicitOAuth<'a> = ManageCompetitionsScope<T::ExplicitOAuth<'a>>;
 
-    fn set_url(&mut self, url: String) {
-        self.0.set_url(url);
-    }
-
     async fn authenticate_explicit_with_client<'a>(self, access_code: String, client: &'a Client) -> Result<Self::ExplicitOAuth<'a>, Error> {
         match self.0.authenticate_explicit_with_client(access_code, client).await {
             Ok(inner) => if inner.scopes().contains(&"manage_competitions") {
@@ -40,7 +37,6 @@ impl<T> OAuthBuilderWithSecret for WithManageCompetition<T> where T: OAuthBuilde
 
 pub struct ManageCompetitionsScope<T>(T);
 
-
 #[async_trait]
 impl<T> OAuth for ManageCompetitionsScope<T> where T: OAuth + Sync {
     type Email = T::Email;
@@ -53,13 +49,19 @@ impl<T> OAuth for ManageCompetitionsScope<T> where T: OAuth + Sync {
         self.0.prefix()
     }
 
-    fn set_prefix(&mut self, prefix: String) {
-        self.0.set_prefix(prefix)
+    fn client(&self) -> &Client {
+        &self.0.client()
     }
 
     async fn custom_route(&self, suffix: &str) -> Result<String, reqwest::Error> {
         let result = self.0.custom_route(suffix);
         result.await
+    }
+}
+
+impl<T> SetAccessToken for ManageCompetitionsScope<T> where T: SetAccessToken {
+    fn set_access_token(&mut self, access_token: String) {
+        self.0.set_access_token(access_token);
     }
 }
 

@@ -21,10 +21,14 @@ pub trait OAuth {
     }
 
     fn prefix(&self) -> &str;
-
-    fn set_prefix(&mut self, prefix: String);
+    
+    fn client(&self) -> &Client;
 
     async fn custom_route(&self, suffix: &str) -> Result<String, reqwest::Error>;
+}
+
+pub(super) trait SetAccessToken {
+    fn set_access_token(&mut self, access_token: String);
 }
 
 pub trait LoggedIn: OAuth { 
@@ -51,7 +55,7 @@ impl Scope for Enabled { }
 impl Scope for Disabled { }
 
 /// Builder trait for building an oauth instance
-pub trait OAuthBuilder: Sized {
+pub trait OAuthBuilder: Sized + Clone {
     type ImplicitOAuth<'a>: OAuth + Sync + Send;
 
     fn with_secret(self, client_id: String, secret: String, redirect_uri: String) -> WithSecret<Self> {
@@ -60,10 +64,6 @@ pub trait OAuthBuilder: Sized {
 
     fn with_manage_competition_scope(self) -> WithManageCompetition<Self> {
         WithManageCompetition(self)
-    }
-
-    fn staging(self) -> StagingBuilder<Self> {
-        StagingBuilder(self)
     }
 
     fn scopes(&self) -> Vec<&str>;
@@ -76,11 +76,9 @@ pub trait OAuthBuilder: Sized {
 }
 
 #[async_trait]
-pub trait OAuthBuilderWithSecret: Sized + OAuthBuilder {
+pub trait OAuthBuilderWithSecret: Sized + OAuthBuilder + Clone {
     type ExplicitOAuth<'a>: OAuth + Refreshable + Sync + Send;
-
-    fn set_url(&mut self, url: String);
-
+    
     async fn authenticate_explicit(self, access_code: String) -> Result<Self::ExplicitOAuth<'static>, Error> {
         self.authenticate_explicit_with_client(access_code, &CLIENT).await
     }
@@ -91,4 +89,3 @@ pub trait OAuthBuilderWithSecret: Sized + OAuthBuilder {
 pub trait OAuthManageCompetitions { }
 
 impl<T> OAuthManageCompetitions for T where T: OAuth<ManageCompetitions = Enabled> { }
-

@@ -3,16 +3,15 @@ mod manage_competitions;
 mod secret;
 mod base;
 mod requests;
-mod staging;
 
 use lazy_static::lazy_static;
-use reqwest::Client;
 pub use traits::*;
 pub use manage_competitions::*;
 pub use secret::*;
 pub use base::*;
 pub use requests::*;
-pub use staging::*;
+
+pub use reqwest::Client;
 
 use serde::Deserialize;
 
