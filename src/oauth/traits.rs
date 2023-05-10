@@ -85,7 +85,3 @@ pub trait OAuthBuilderWithSecret: Sized + OAuthBuilder + Clone {
 
     async fn authenticate_explicit_with_client<'a>(self, access_code: String, client: &'a Client) -> Result<Self::ExplicitOAuth<'a>, Error>;
 }
-
-pub trait OAuthManageCompetitions { }
-
-impl<T> OAuthManageCompetitions for T where T: OAuth<ManageCompetitions = Enabled> { }
