@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+pub trait LoggedIn { }
+
 use async_trait::async_trait;
 use super::*;
 
@@ -16,6 +18,8 @@ pub trait OAuth {
     
     type DateOfBirth: Scope;
 
+    type Public: Scope;
+
     fn competitions(&self) -> CompetitionsEndpoint<'_, Self> {
         CompetitionsEndpoint { query: HashMap::new(), inner: self }
     }
@@ -29,12 +33,6 @@ pub trait OAuth {
 
 pub(super) trait SetAccessToken {
     fn set_access_token(&mut self, access_token: String);
-}
-
-pub trait LoggedIn: OAuth { 
-    fn me(&self) -> MeEndpoint<'_, Self> where Self: LoggedIn {
-        MeEndpoint { inner: self }
-    }    
 }
 
 #[async_trait]
@@ -66,6 +64,18 @@ pub trait OAuthBuilder: Sized + Clone {
         WithManageCompetition(self)
     }
 
+    fn with_email(self) -> WithEmail<Self> {
+        WithEmail(self)
+    }
+
+    fn with_dob(self) -> WithDob<Self> {
+        WithDob(self)
+    }
+
+    fn with_public(self) -> WithPublic<Self> {
+        WithPublic(self)
+    }
+
     fn scopes(&self) -> Vec<&str>;
 
     fn authenticate_implicit(self, access_token: String) -> Self::ImplicitOAuth<'static> {
@@ -89,3 +99,11 @@ pub trait OAuthBuilderWithSecret: Sized + OAuthBuilder + Clone {
 pub trait OAuthManageCompetitions { }
 
 impl<T> OAuthManageCompetitions for T where T: OAuth<ManageCompetitions = Enabled> { }
+
+pub trait OAuthPublic {
+    fn me(&self) -> MeEndpoint<'_, Self> {
+        MeEndpoint { inner: self }
+    }    
+}
+
+impl<T> OAuthPublic for T where T: OAuth<Public = Enabled> { } 

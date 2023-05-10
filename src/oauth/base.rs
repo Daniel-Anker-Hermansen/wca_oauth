@@ -45,6 +45,8 @@ impl OAuth for ImplicitOAuth<'_> {
 
     type DateOfBirth = Disabled;
 
+    type Public = Disabled;
+
     fn prefix(&self) -> &str {
         &self.prefix
     }
@@ -104,6 +106,8 @@ impl OAuth for PublicApi<'_> {
     type ManageCompetitions = Disabled;
 
     type DateOfBirth = Disabled;
+
+    type Public = Disabled;
 
     fn prefix(&self) ->  &str {
         &self.prefix

@@ -23,6 +23,8 @@ impl<T> OAuth for ExplicitOauth<T> where T: OAuth + Send + Sync {
 
     type DateOfBirth = T::DateOfBirth;
 
+    type Public = T::Public;
+
     fn prefix(&self) ->  &str {
         self.inner.prefix()
     }

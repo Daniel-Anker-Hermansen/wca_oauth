@@ -3,6 +3,9 @@ mod manage_competitions;
 mod secret;
 mod base;
 mod requests;
+mod email;
+mod dob;
+mod public;
 
 use lazy_static::lazy_static;
 pub use traits::*;
@@ -10,6 +13,9 @@ pub use manage_competitions::*;
 pub use secret::*;
 pub use base::*;
 pub use requests::*;
+pub use email::*;
+pub use dob::*;
+pub use public::*;
 
 pub use reqwest::Client;
 
@@ -48,5 +54,14 @@ impl From<reqwest::Error> for Error {
 impl From<String> for Error {
     fn from(value: String) -> Self {
         Error::Other(value)
+    }
+}
+
+fn check_scope<T: Refreshable>(t: T, scope: &str) -> Result<T, Error> {
+    if !t.scopes().contains(&scope) {
+        Err(Error::MissingScope(scope.to_owned()))
+    }
+    else {
+        Ok(t)
     }
 }
