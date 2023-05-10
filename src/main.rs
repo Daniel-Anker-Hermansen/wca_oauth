@@ -19,8 +19,12 @@ async fn main() {
     oauth.refresh().await.unwrap();
 
     let result = oauth
-        .me()
-        .send().await;
+        .competitions()
+        .managed_by_me()
+        .page(1.try_into().unwrap())
+        .send()
+        .await
+        .unwrap();
 
-    println!("{result:?}");
+    println!("{:?}", result[0]);
 }

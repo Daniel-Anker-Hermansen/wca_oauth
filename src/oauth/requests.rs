@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, num::NonZeroUsize};
 
 use serde_json::Value;
 
@@ -24,10 +24,17 @@ impl<T> CompetitionsEndpoint<'_, T> where T: OAuth + ?Sized {
 
     /// Sets the managed_by_me flag to true, and only shows competitions at which you have
     /// administrator privileges. Requires manage_competitions scope.
-    pub fn managed_by_me(&mut self) -> &mut Self where T: OAuthManageCompetitions {
+    pub fn managed_by_me(&mut self) -> &mut Self where T: OAuth<ManageCompetitions = Enabled> {
         self.query.insert("managed_by_me", "true".to_owned()); 
         self
-    } 
+    }
+
+    /// Chooses which page to request. Default is 1. Each page has at most 25 entries.
+    /// Note: Pages are 1-indexed.
+    pub fn page(&mut self, index: NonZeroUsize) -> &mut Self {
+        self.query.insert("page", index.to_string());
+        self
+    }
 }
 
 pub struct MeEndpoint<'a, T> where T: ?Sized {
