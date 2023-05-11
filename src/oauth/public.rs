@@ -9,7 +9,7 @@ impl<T> OAuthBuilder for WithPublic<T> where T: OAuthBuilder {
 
     fn scopes(&self) -> Vec<&str> {
         let mut vec = self.0.scopes();
-        vec.retain(|t| *t != "public");
+        vec.push("public");
         vec
     }
 
