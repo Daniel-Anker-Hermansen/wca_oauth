@@ -23,6 +23,10 @@ pub trait OAuth {
     fn competitions(&self) -> CompetitionsEndpoint<'_, Self> {
         CompetitionsEndpoint { query: HashMap::new(), inner: self }
     }
+    
+    fn me(&self) -> MeEndpoint<'_, Self> where Self: OAuthPublic {
+        MeEndpoint { inner: self }
+    }    
 
     fn prefix(&self) -> &str;
     
@@ -64,15 +68,15 @@ pub trait OAuthBuilder: Sized + Clone {
         WithManageCompetition(self)
     }
 
-    fn with_email(self) -> WithEmail<Self> {
+    fn with_email_scope(self) -> WithEmail<Self> {
         WithEmail(self)
     }
 
-    fn with_dob(self) -> WithDob<Self> {
+    fn with_dob_scope(self) -> WithDob<Self> {
         WithDob(self)
     }
 
-    fn with_public(self) -> WithPublic<Self> {
+    fn with_public_scope(self) -> WithPublic<Self> {
         WithPublic(self)
     }
 
@@ -100,10 +104,6 @@ pub trait OAuthManageCompetitions { }
 
 impl<T> OAuthManageCompetitions for T where T: OAuth<ManageCompetitions = Enabled> { }
 
-pub trait OAuthPublic {
-    fn me(&self) -> MeEndpoint<'_, Self> {
-        MeEndpoint { inner: self }
-    }    
-}
+pub trait OAuthPublic { }
 
 impl<T> OAuthPublic for T where T: OAuth<Public = Enabled> { } 

@@ -14,6 +14,7 @@ mod assignment_code;
 mod personal_best;
 mod event;
 mod round;
+mod attempt_result;
 
 pub use date::*;
 pub use date_time::*;
@@ -29,6 +30,7 @@ pub use assignment_code::*;
 pub use personal_best::*;
 pub use event::*;
 pub use round::*;
+pub use attempt_result::*;
 
 // Reexport of serdejson value as it is used internally in some api types.
 pub use serde_json::Value;

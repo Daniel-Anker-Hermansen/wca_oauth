@@ -1,4 +1,5 @@
 use serde::{Serialize, Deserialize};
+use super::AssignmentCode;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
