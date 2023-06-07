@@ -1,10 +1,10 @@
-use serde::{Serialize, Deserialize};
 use super::AssignmentCode;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Assignment {
-    pub activity_id: i64,
-    pub assignment_code: AssignmentCode,
-    pub station_number: Option<i64>,
+        pub activity_id: i64,
+        pub assignment_code: AssignmentCode,
+        pub station_number: Option<i64>,
 }

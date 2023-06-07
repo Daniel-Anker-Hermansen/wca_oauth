@@ -1,67 +1,58 @@
-mod traits;
-mod manage_competitions;
-mod secret;
 mod base;
 mod requests;
-mod email;
-mod dob;
-mod public;
+mod scope;
+mod secret;
+mod traits;
 
-use lazy_static::lazy_static;
-pub use traits::*;
-pub use manage_competitions::*;
-pub use secret::*;
 pub use base::*;
 pub use requests::*;
-pub use email::*;
-pub use dob::*;
-pub use public::*;
-
-pub use reqwest::Client;
+pub use scope::*;
+pub use secret::*;
+pub use traits::*;
 
 use serde::Deserialize;
 
-lazy_static! {
-    static ref CLIENT: Client = Client::new();
+lazy_static::lazy_static! {
+        static ref CLIENT: reqwest::Client = reqwest::Client::new();
 }
 
 #[derive(Deserialize, Debug)]
 pub struct ApiError {
-    pub error: String,
-    pub error_description: Option<String>,
+        pub error: String,
+        pub error_description: Option<String>,
 }
 
 #[derive(Debug)]
 pub enum Error {
-    ApiError(ApiError),
-    ReqwestError(reqwest::Error),
-    MissingScope(String),
-    Other(String),
+        ApiError(ApiError),
+        ReqwestError(reqwest::Error),
+        MissingScope(String),
+        Other(String),
 }
 
 impl From<ApiError> for Error {
-    fn from(value: ApiError) -> Self {
-        Error::ApiError(value)
-    }
+        fn from(value: ApiError) -> Self {
+                Error::ApiError(value)
+        }
 }
 
 impl From<reqwest::Error> for Error {
-    fn from(value: reqwest::Error) -> Self {
-        Error::ReqwestError(value)
-    }
+        fn from(value: reqwest::Error) -> Self {
+                Error::ReqwestError(value)
+        }
 }
 
 impl From<String> for Error {
-    fn from(value: String) -> Self {
-        Error::Other(value)
-    }
+        fn from(value: String) -> Self {
+                Error::Other(value)
+        }
 }
 
-fn check_scope<T: Refreshable>(t: T, scope: &str) -> Result<T, Error> {
-    if !t.scopes().contains(&scope) {
-        Err(Error::MissingScope(scope.to_owned()))
-    }
-    else {
-        Ok(t)
-    }
+fn check_scope<T: RefreshableClient>(t: T, scope: &str) -> Result<T, Error> {
+        if !t.scopes().contains(&scope) {
+                Err(Error::MissingScope(scope.to_owned()))
+        }
+        else {
+                Ok(t)
+        }
 }

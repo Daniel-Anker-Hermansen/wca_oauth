@@ -1,0 +1,13 @@
+brace_style = "PreferSameLine"
+chain_width = 40
+control_brace_style = "ClosingNextLine"
+fn_params_layout = "Compressed"
+fn_call_width = 120
+force_explicit_abi = false
+match_block_trailing_comma = true
+max_width = 120
+imports_granularity = "Crate"
+struct_lit_single_line = false
+tab_spaces = 8
+use_field_init_shorthand = true
+where_single_line = true
