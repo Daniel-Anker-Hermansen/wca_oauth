@@ -1,4 +1,5 @@
 use crate::api_types::AttemptResult;
+use std::fmt::Write;
 
 pub enum Event {
         E333,
@@ -159,6 +160,5 @@ impl Format {
                                 Format::MultiOld => todo!(),
                         }),
                 }
-                unimplemented!()
         }
 }
