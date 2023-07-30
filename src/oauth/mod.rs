@@ -18,41 +18,42 @@ lazy_static::lazy_static! {
 
 #[derive(Deserialize, Debug)]
 pub struct ApiError {
-        pub error: String,
-        pub error_description: Option<String>,
+    pub error: String,
+    pub error_description: Option<String>,
 }
 
 #[derive(Debug)]
 pub enum Error {
-        ApiError(ApiError),
-        ReqwestError(reqwest::Error),
-        MissingScope(String),
-        Other(String),
+    ApiError(ApiError),
+    ReqwestError(reqwest::Error),
+    MissingScope(String),
+    Serde(serde_json::Error),
+    Other(String),
 }
 
 impl From<ApiError> for Error {
-        fn from(value: ApiError) -> Self {
-                Error::ApiError(value)
-        }
+    fn from(value: ApiError) -> Self {
+        Error::ApiError(value)
+    }
 }
 
 impl From<reqwest::Error> for Error {
-        fn from(value: reqwest::Error) -> Self {
-                Error::ReqwestError(value)
-        }
+    fn from(value: reqwest::Error) -> Self {
+        Error::ReqwestError(value)
+    }
 }
 
 impl From<String> for Error {
-        fn from(value: String) -> Self {
-                Error::Other(value)
-        }
+    fn from(value: String) -> Self {
+        Error::Other(value)
+    }
 }
 
 fn check_scope<T: RefreshableClient>(t: T, scope: &str) -> Result<T, Error> {
-        if !t.scopes().contains(&scope) {
-                Err(Error::MissingScope(scope.to_owned()))
-        }
-        else {
-                Ok(t)
-        }
+    if !t.scopes().contains(&scope) {
+        Err(Error::MissingScope(scope.to_owned()))
+    }
+    else {
+        Ok(t)
+    }
 }

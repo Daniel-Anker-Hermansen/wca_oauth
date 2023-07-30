@@ -1,9 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use crate::ScopeTypes;
+#[derive(Deserialize, Serialize, Debug)]
+pub(crate) struct MeWrapper<Email, DateOfBirth> {
+    pub me: Me<Email, DateOfBirth>,
+}
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Me<Email: ScopeTypes, DateOfBirth: ScopeTypes> {
-        email: Email::Email,
-        dob: DateOfBirth::DateOfBirth,
+pub struct Me<Email, DateOfBirth> {
+    email: Email,
+    dob: DateOfBirth,
 }

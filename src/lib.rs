@@ -3,7 +3,7 @@ mod competition;
 //pub mod event;
 pub mod oauth;
 //mod wcif_oauth;
-//mod api_types;
+pub mod api_types;
 //pub mod noauth;
 pub mod me;
 

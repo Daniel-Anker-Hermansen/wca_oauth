@@ -1,16 +1,19 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Debug)]
+use super::{TimeLimit, Cutoff, AdvancementCondition, Result, ScrambleSet};
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Round {
-        pub id: String,
-        pub format: String,
-        pub time_limit: Option<TimeLimit>,
-        pub cutoff: Option<Cutoff>,
-        pub advancement_condition: Option<AdvancementCondition>,
-        pub result: Vec<Result>,
-        pub scramble_set_count: u64,
-        pub scramble_sets: Vec<ScrambleSet>,
-        pub extentions: Vec<Value>,
+    pub id: String,
+    pub format: String,
+    pub time_limit: Option<TimeLimit>,
+    pub cutoff: Option<Cutoff>,
+    pub advancement_condition: Option<AdvancementCondition>,
+    pub results: Vec<Result>,
+    pub scramble_set_count: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scramble_sets: Option<Vec<ScrambleSet>>,
+    pub extensions: Vec<Value>,
 }
